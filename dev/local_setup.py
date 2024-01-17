@@ -21,8 +21,8 @@ BUCKET_NAME = os.getenv('BUCKET_NAME', 'vetube')
 
 # Lambda configuration
 LAMBDA_FUNCTION_NAME = os.getenv('LAMBDA_FUNCTION_NAME', 'handle-video-upload')
-LAMBDA_HANDLER = os.getenv('LAMBDA_HANDLER', 'lambda_test.lambda_handler')
-LAMBDA_FUNCTION_PATH = os.getenv('LAMBDA_FUNCTION_PATH', os.path.join('.', 'lambda', 'function.zip'))
+LAMBDA_HANDLER = os.getenv('LAMBDA_HANDLER', 'lambda_function.lambda_handler')
+LAMBDA_FUNCTION_PATH = os.getenv('LAMBDA_FUNCTION_PATH', os.path.join('.', 'lambda', 'lambda_publish_to_rabbitmq.zip'))
 LAMBDA_ROLE_ARN = os.getenv('LAMBDA_ROLE_ARN', 'arn:aws:iam::000000000000:role/irrelevant')
 
 # RabbitMQ configuration
@@ -105,7 +105,7 @@ def create_lambda_function():
     logging.info(f'Creating Lambda function {LAMBDA_FUNCTION_NAME}...')
     lambda_client.create_function(
         FunctionName=LAMBDA_FUNCTION_NAME,
-        Runtime='python3.9',
+        Runtime='python3.8',
         Role=LAMBDA_ROLE_ARN,
         Handler=LAMBDA_HANDLER,
         Code={

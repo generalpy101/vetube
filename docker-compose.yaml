@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   localstack:
-    image: localstack/localstack
+    image: localstack/localstack:1.4
     ports:
       - "4566:4566"
     environment:
@@ -11,7 +11,7 @@ services:
       - LOCALSTACK_HOST=localstack
       - DEBUG=0
       - DOCKER_HOST=unix:///var/run/docker.sock
-      - LAMBDA_RUNTIME_ENVIRONMENT_TIMEOUT=30
+      - LAMBDA_RUNTIME_ENVIRONMENT_TIMEOUT=100
     command: sh -c "sleep 10 && tail -f /dev/null"
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
@@ -24,6 +24,7 @@ services:
     environment:
       - RABBITMQ_DEFAULT_USER=guest
       - RABBITMQ_DEFAULT_PASS=guest
+      - RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS=-rabbit inet_dist_listen_min 25672 -rabbit inet_dist_listen_max 25672
     volumes:
       - ./rabbitmq/data:/var/lib/rabbitmq/mnesia
       - ./rabbitmq/logs:/var/log/rabbitmq
@@ -33,7 +34,7 @@ services:
       context: ./dev
     environment:
       - LOCALSTACK_URL=http://localstack:4566
-      - LAMBDA_FUNCTION_NAME=lambda_test
+      - LAMBDA_FUNCTION_NAME=lambda_publish_mq
       - RABBITMQ_HOST=rabbitmq
     depends_on:
       - localstack
