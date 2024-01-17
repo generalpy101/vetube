@@ -11,9 +11,22 @@ services:
       - LOCALSTACK_HOST=localstack
       - DEBUG=0
       - DOCKER_HOST=unix:///var/run/docker.sock
+      - LAMBDA_RUNTIME_ENVIRONMENT_TIMEOUT=30
     command: sh -c "sleep 10 && tail -f /dev/null"
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
+
+  rabbitmq:
+    image: rabbitmq:3.8.9-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    volumes:
+      - ./rabbitmq/data:/var/lib/rabbitmq/mnesia
+      - ./rabbitmq/logs:/var/log/rabbitmq
 
   setup:
     build:
@@ -21,5 +34,7 @@ services:
     environment:
       - LOCALSTACK_URL=http://localstack:4566
       - LAMBDA_FUNCTION_NAME=lambda_test
+      - RABBITMQ_HOST=rabbitmq
     depends_on:
       - localstack
+      - rabbitmq

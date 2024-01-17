@@ -4,6 +4,7 @@ import dotenv
 import os
 import logging
 import requests
+import pika
 
 logging.basicConfig(level=logging.INFO)
 
@@ -23,6 +24,12 @@ LAMBDA_FUNCTION_NAME = os.getenv('LAMBDA_FUNCTION_NAME', 'handle-video-upload')
 LAMBDA_HANDLER = os.getenv('LAMBDA_HANDLER', 'lambda_test.lambda_handler')
 LAMBDA_FUNCTION_PATH = os.getenv('LAMBDA_FUNCTION_PATH', os.path.join('.', 'lambda', 'function.zip'))
 LAMBDA_ROLE_ARN = os.getenv('LAMBDA_ROLE_ARN', 'arn:aws:iam::000000000000:role/irrelevant')
+
+# RabbitMQ configuration
+RABBITMQ_HOST = os.getenv('RABBITMQ_HOST', 'localhost')
+RABBITMQ_PORT = os.getenv('RABBITMQ_PORT', 5672)
+RABBITMQ_USER = os.getenv('RABBITMQ_USER', 'guest')
+RABBITMQ_PASSWORD = os.getenv('RABBITMQ_PASSWORD', 'guest')
 
 os.environ['AWS_DEFAULT_REGION'] = os.getenv('AWS_DEFAULT_REGION', 'us-east-1')
 
@@ -44,6 +51,26 @@ def wait_for_localstack():
             time.sleep(SLEEP_TIME_BEFORE_RETRY)
     else:
         logging.error('LocalStack is not ready. Aborting...')
+        exit(1)
+        
+def wait_for_rabbitmq():
+    # Wait for RabbitMQ to be ready
+    max_attempts = 10
+    current_attempt = 0
+    logging.info('Waiting for RabbitMQ to be ready...')
+    while current_attempt < max_attempts:
+        try:
+            connection = pika.BlockingConnection(pika.ConnectionParameters(host=RABBITMQ_HOST, port=RABBITMQ_PORT))
+            connection.close()
+            logging.info('RabbitMQ is ready!')
+            break
+        except Exception:
+            logging.info(f'RabbitMQ is not ready yet. Retrying in {SLEEP_TIME_BEFORE_RETRY} second...')
+            logging.info(f'Attempt {current_attempt} of {max_attempts}')
+            current_attempt += 1
+            time.sleep(SLEEP_TIME_BEFORE_RETRY)
+    else:
+        logging.error('RabbitMQ is not ready. Aborting...')
         exit(1)
 
 def create_s3_bucket():
@@ -127,6 +154,7 @@ def _aws_file_as_bytes(file_name):
         return f.read()
 
 if __name__ == "__main__":
+    wait_for_rabbitmq()
     wait_for_localstack()
     create_s3_bucket()
     create_lambda_function()
