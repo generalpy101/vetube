@@ -17,13 +17,14 @@ parameters = pika.ConnectionParameters(credentials=credentials, host=RABBITMQ_HO
 
 
 def lambda_handler(event, context):
-    print(f'Connecting to RabbitMQ at {RABBITMQ_HOST}:{RABBITMQ_PORT}...') 
-    print("Received S3 event:", json.dumps(event, indent=2))
+    logging.info(f'Connecting to RabbitMQ at {RABBITMQ_HOST}:{RABBITMQ_PORT}...') 
+    logging.info("Received S3 event:", json.dumps(event, indent=2))
     
     connection = pika.BlockingConnection(parameters)
     
     channel = connection.channel()
-    channel.basic_publish(exchange='', routing_key='hello', body=f'Hello World! It is {datetime.datetime.now()}')
+
+    channel.basic_publish(exchange='videos', routing_key='video.uploaded', body=f'Hello World! It is {datetime.datetime.now()}')
     
     return {
         'statusCode': 200,
